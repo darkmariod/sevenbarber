@@ -1,0 +1,255 @@
+:root {
+  /* Colores del logo */
+  --green-deep: #021612;
+  --green-soft: #053227;
+  --gold: #d4af37;
+  --gold-soft: rgba(212, 175, 55, 0.16);
+
+  --card-bg: #f9f4e6;
+  --text-main: #151515;
+  --text-muted: #6b7280;
+  --border-soft: rgba(17, 24, 39, 0.08);
+  --shadow-soft: 0 22px 60px rgba(0, 0, 0, 0.75);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at top, #0a4231 0, transparent 55%),
+    radial-gradient(circle at bottom, #03110e 0, transparent 55%),
+    linear-gradient(135deg, var(--green-deep), var(--green-soft));
+}
+
+/* ====== Layout principal ====== */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1.8rem 1.1rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+  padding: 1.5rem 1.3rem 1.5rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ====== Header con logo circular ====== */
+
+.brand-header {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+  margin-bottom: 0.9rem;
+}
+
+.brand-logo-wrapper {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: var(--green-deep);
+  border: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.brand-logo-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brand-title {
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  font-size: 1rem;
+}
+
+.brand-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  background: var(--green-deep);
+  color: #f9fafb;
+  margin-top: 0.35rem;
+  border: 1px solid var(--gold-soft);
+}
+
+/* ====== Intro ====== */
+
+.intro {
+  font-size: 0.86rem;
+  color: var(--text-main);
+  line-height: 1.55;
+  margin-bottom: 0.8rem;
+}
+
+.intro strong {
+  color: #000000;
+}
+
+.intro em {
+  color: var(--text-muted);
+  font-style: normal;
+}
+
+/* ====== Lista de links ====== */
+
+.link-list {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.link-item {
+  width: 100%;
+}
+
+.link-anchor {
+  width: 100%;
+  border-radius: 999px;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.15s ease, background 0.15s ease;
+}
+
+.link-anchor--primary {
+  border-color: var(--gold);
+  background: linear-gradient(135deg, #fffdf7, #f5e6b8);
+}
+
+.link-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.link-icon-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.link-label-main {
+  display: block;
+}
+
+.link-label-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.link-arrow {
+  font-size: 1.05rem;
+  color: #9ca3af;
+}
+
+.link-anchor:hover {
+  border-color: var(--gold);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+  transform: translateY(-1px);
+}
+
+.link-anchor:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ====== Footer ====== */
+
+.footer {
+  margin-top: 1.2rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.footer a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+/* ====== RESPONSIVE ====== */
+
+@media (min-width: 480px) {
+  .page {
+    padding: 2.4rem 1.4rem;
+  }
+
+  .card {
+    padding: 1.8rem 1.5rem 1.7rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .page {
+    align-items: center;
+    padding: 3.2rem 1.5rem;
+  }
+
+  .card {
+    padding: 2.1rem 1.7rem 1.9rem;
+  }
+}

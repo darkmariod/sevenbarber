@@ -1,16 +1,109 @@
 ---
-
+const links = [
+  {
+    type: "primary",
+    icon: "📅",
+    title: "Reservar tu cita",
+    subtitle: "Agenda en línea en segundos",
+    href: "https://tupagina-de-reservas.com",
+  },
+  {
+    type: "normal",
+    icon: "🎬",
+    title: "TikTok oficial",
+    subtitle: "@sevenbarberclub",
+    href: "https://www.tiktok.com/@sevenbarberclub",
+  },
+  {
+    type: "normal",
+    icon: "📍",
+    title: "Cómo llegar",
+    subtitle: "Abrir ubicación en Google Maps",
+    href: "https://maps.app.goo.gl/oUk7PixGYvsRC7GPA",
+  },
+  {
+    type: "normal",
+    icon: "⭐",
+    title: "Deja tu reseña",
+    subtitle: "Google Business",
+    href: "https://g.page/r/CRkfjsoM0JXQEBM/review",
+  },
+];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Seven Barber Club | Links</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Todos los links de Seven Barber Club en un solo lugar: reservas, redes, ubicación y reseñas."
+    />
+    <link rel="stylesheet" href="/styles/main.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card" data-card>
+        <header class="brand-header">
+          <div class="brand-logo-wrapper">
+            <img src="/media/seven-logo.png" alt="Seven Barber Club" />
+          </div>
+          <div>
+            <div class="brand-title">SEVEN BARBER CLUB</div>
+            <div class="brand-subtitle">Barbería & grooming masculino</div>
+            <div class="badge">
+              <span>✂️</span>
+              <span>Riobamba, Ecuador</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="intro">
+          👋 <strong>Hola!</strong> Bienvenido a la página de enlaces de
+          <strong>Seven Barber Club</strong>. Aquí encuentras todo:
+          <em>reservas, redes, ubicación y reseñas</em> para que tu próxima
+          visita sea 🔥.
+        </section>
+
+        <ul class="link-list">
+          {
+            links.map((link) => (
+              <li class="link-item">
+                <a
+                  href={link.href}
+                  class={`link-anchor ${
+                    link.type === "primary" ? "link-anchor--primary" : ""
+                  }`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div class="link-left">
+                    <span class="link-icon-circle">{link.icon}</span>
+                    <div>
+                      <span class="link-label-main">{link.title}</span>
+                      <span class="link-label-sub">{link.subtitle}</span>
+                    </div>
+                  </div>
+                  <span class="link-arrow">➜</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+
+        <footer class="footer">
+          Desarrollado por
+          <a
+            href="https://monkeycomputer.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Monkey Computer</a
+          >
+        </footer>
+      </section>
+    </main>
+
+    <script type="module" src="/scripts/main.js"></script>
+  </body>
 </html>
