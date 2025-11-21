@@ -8,21 +8,74 @@ TZ = ZoneInfo("America/Guayaquil")
 
 class GoogleService:
     def __init__(self, creds_file: str = "credentials.json"):
+
         creds_env = os.getenv("GOOGLE_CREDENTIALS_JSON")
+
         if creds_env:
-            creds_env = creds_env.replace("\\n", "\n")
-            info = json.loads(creds_env)
-            creds = service_account.Credentials.from_service_account_info(
-                info, scopes=["https://www.googleapis.com/auth/calendar"]
-            )
+            try:
+                creds_env = creds_env.replace("\\n", "\n")
+                info = json.loads(creds_env)
+
+                creds = service_account.Credentials.from_service_account_info(
+                    info,
+                    scopes=["https://www.googleapis.com/auth/calendar"]
+                )
+                print("🔐 Usando credenciales desde variable de entorno (Render).")
+
+            except Exception as e:
+                raise Exception(f"❌ Error cargando GOOGLE_CREDENTIALS_JSON: {e}")
+
         else:
-            creds = service_account.Credentials.from_service_account_file(
-                creds_file, scopes=["https://www.googleapis.com/auth/calendar"]
-            )
+            try:
+                creds = service_account.Credentials.from_service_account_file(
+                    creds_file,
+                    scopes=["https://www.googleapis.com/auth/calendar"]
+                )
+                print("📄 Usando credenciales locales desde credentials.json.")
+
+            except Exception as e:
+                raise Exception(
+                    f"❌ No se pudo cargar credentials.json.\n"
+                    f"Error: {e}\nAsegúrate que el archivo existe o define GOOGLE_CREDENTIALS_JSON."
+                )
 
         self.service = build("calendar", "v3", credentials=creds)
 
-    # HORAS DISPONIBLES
+    # ------------------------------------------------------------------
+    # CREAR EVENTO (versión usada por tu app.py)
+    # ------------------------------------------------------------------
+    def crear_evento(self, calendar_id, resumen, descripcion, inicio, fin, timezone="America/Guayaquil"):
+        try:
+            evento = {
+                "summary": resumen,
+                "description": descripcion,
+                "start": {
+                    "dateTime": inicio.isoformat(),
+                    "timeZone": timezone
+                },
+                "end": {
+                    "dateTime": fin.isoformat(),
+                    "timeZone": timezone
+                },
+                "reminders": {
+                    "useDefault": False,
+                    "overrides": [{"method": "popup", "minutes": 30}]
+                }
+            }
+
+            self.service.events().insert(
+                calendarId=calendar_id,
+                body=evento
+            ).execute()
+
+            print(f"✅ Evento creado correctamente: {resumen}")
+
+        except Exception as e:
+            raise Exception(f"❌ Error creando evento en Google Calendar: {e}")
+
+    # ------------------------------------------------------------------
+    # FUNCION OPCIONAL: generar horarios libres
+    # ------------------------------------------------------------------
     def generar_slots_libres(self, calendar_id: str, fecha: datetime, duracion_min: int):
         try:
             start_day = datetime(fecha.year, fecha.month, fecha.day, 9, 0, tzinfo=TZ)
@@ -49,28 +102,20 @@ class GoogleService:
 
             current = start_day
             while current + timedelta(minutes=duracion_min) <= end_day:
+
                 libre = True
                 for (s, f) in ocupados:
                     if s <= current < f:
                         libre = False
                         break
+
                 if libre:
                     horas.append(current.strftime("%H:%M"))
+
                 current += step
 
             return horas
-        except Exception as e:
-            print("❌ Error generando slots:", e)
-            return []
 
-    # CREAR EVENTO
-    def crear_evento(self, calendar_id, resumen, descripcion, inicio, fin, timezone):
-        evento = {
-            "summary": resumen,
-            "description": descripcion,
-            "start": {"dateTime": inicio.isoformat(), "timeZone": timezone},
-            "end": {"dateTime": fin.isoformat(), "timeZone": timezone},
-            "reminders": {"useDefault": False, "overrides": [{"method": "popup", "minutes": 30}]},
-        }
-        self.service.events().insert(calendarId=calendar_id, body=evento).execute()
-        print(f"✅ Evento creado: {resumen}")
+        except Exception as e:
+            print("❌ Error generando horarios libres:", e)
+            return []

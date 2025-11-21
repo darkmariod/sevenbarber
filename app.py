@@ -1,47 +1,43 @@
+# app.py
 import streamlit as st
 from streamlit_option_menu import option_menu
 from datetime import datetime, timedelta
 from gc_service import GoogleService
-import os
-import base64
+import os, base64
 
-# --------------------------------------------
-# GOOGLE CALENDAR
-# --------------------------------------------
-CREDENTIALS = "credentials.json"
-CALENDAR_ID = "mariodanielq.p@gmail.com"
-gc = GoogleService(CREDENTIALS)
+# -------------------------------
+# GOOGLE CALENDAR CONFIG
+# -------------------------------
+CALENDAR_ID = os.getenv("CALENDAR_ID", "mariodanielq.p@gmail.com")
+gc = GoogleService()  # Render usa GOOGLE_CREDENTIALS_JSON
 
-# --------------------------------------------
-# FUNCION BASE64
-# --------------------------------------------
+# -------------------------------
+# FUNCIONES AUXILIARES
+# -------------------------------
 def img_to_b64(path):
     with open(path, "rb") as img:
         return base64.b64encode(img.read()).decode()
 
-# --------------------------------------------
-# CSS
-# --------------------------------------------
 def load_css(file_name: str):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# --------------------------------------------
+# -------------------------------
 # CONFIG STREAMLIT
-# --------------------------------------------
+# -------------------------------
 st.set_page_config(page_title="Seven Barber Club", page_icon="✂️", layout="centered")
 load_css("css/style.css")
 
-# --------------------------------------------
+# -------------------------------
 # HEADER
-# --------------------------------------------
+# -------------------------------
 st.image("assets/banner.png")
 st.title("Seven Barber Club")
 st.text("📍 Av. Unidad Nacional entre Juan Montalvo y Carabobo")
 
-# --------------------------------------------
-# MENU - SIN QR (PRODUCCIÓN)
-# --------------------------------------------
+# -------------------------------
+# MENU
+# -------------------------------
 selected = option_menu(
     menu_title=None,
     options=["Reservar", "Portafolio", "Aprendiz", "Detalles", "Reseñas"],
@@ -98,15 +94,19 @@ if selected == "Reservar":
             else:
                 st.session_state["mostrar_qr"] = True
 
-    # QR (solo si no es aprendiz)
+    # --------------------------------------------
+    # QR PAGO
+    # --------------------------------------------
     if st.session_state["mostrar_qr"] and not st.session_state["pago_ok"]:
+
         precio = servicios[servicio]
 
         st.markdown(f"""
-        ### 💳 Confirmar pago para tu reserva
+        ### 🏦 Confirmar pago para tu reserva
         <div class="qr-box">
             <h4>💰 Total a pagar: {precio}.00 USD</h4>
-            <p>Escanea este QR para pagar y confirmar tu cita.<br>Al llegar, solo muestra tu comprobante.</p>
+            <p>Escanea este QR para pagar y confirmar tu cita.<br>
+            Al llegar, solo muestra tu comprobante.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -115,27 +115,30 @@ if selected == "Reservar":
         if st.button("✔ Ya pagué"):
             st.session_state["pago_ok"] = True
 
-    # CREAR EVENTO
+    # --------------------------------------------
+    # CREAR EVENTO GOOGLE CALENDAR
+    # --------------------------------------------
     if st.session_state["pago_ok"]:
         try:
             start = datetime.combine(fecha, datetime.strptime(hora, "%H:%M").time())
             end = start + timedelta(hours=1)
 
+            descripcion = (
+                f"Cliente: {nombre}\n"
+                f"WhatsApp: {whatsapp}\n"
+                f"Email: {email}\n"
+                f"Servicio: {servicio}\n"
+                f"Barbero: {barbero}\n"
+                f"Nota: {nota}\n"
+                f"Pago: { '✔ PAGADO' if barbero != '🧪 Aprendiz' else 'No aplica — aprendiz' }"
+            )
+
             gc.crear_evento(
                 calendar_id=CALENDAR_ID,
                 resumen=f"Reserva {servicio} - {nombre}",
-                descripcion=(
-                    f"Cliente: {nombre}\n"
-                    f"WhatsApp: {whatsapp}\n"
-                    f"Email: {email}\n"
-                    f"Servicio: {servicio}\n"
-                    f"Barbero: {barbero}\n"
-                    f"Nota: {nota}\n"
-                    f"Pago: { '✔ PAGADO' if barbero != '🧪 Aprendiz' else 'No aplica — aprendiz' }"
-                ),
+                descripcion=descripcion,
                 inicio=start,
-                fin=end,
-                timezone="America/Guayaquil"
+                fin=end
             )
 
             st.success("✅ Reserva creada con éxito. ¡Gracias!")
@@ -145,7 +148,7 @@ if selected == "Reservar":
             st.session_state["pago_ok"] = False
 
         except Exception as e:
-            st.error(f"❌ Error al crear la reserva: {e}")
+            st.error(f"❌ Error creando evento: {e}")
 
 # ============================================================
 # PORTAFOLIO
@@ -154,45 +157,35 @@ if selected == "Portafolio":
 
     st.subheader("📸 Portafolio — Trabajos reales")
 
-    # Fotos perfiles
-    josue_b64 = img_to_b64("assets/josue-perfil.jpg")
-    ariel_b64 = img_to_b64("assets/ariel-perfil.jpg")
+    perfil_josue = img_to_b64("assets/josue-perfil.jpg")
 
-    # JOSUE
     st.markdown(f"""
     <div class="perfil-barbero">
-        <img src="data:image/jpeg;base64,{josue_b64}">
+        <img class="perfil-avatar" src="data:image/jpeg;base64,{perfil_josue}">
         <h3>👑 Josué</h3>
-        <p>Maestro barbero — precisión y estilo.</p>
+        <p>Fades limpios, terminaciones prolijas y estilo moderno.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    for img in ["assets/corte-1.jpg","assets/corte-2.jpg","assets/corte-3.jpg"]:
-        img64 = img_to_b64(img)
-        st.markdown(f"""
-        <div class="corte-box">
-            <img src="data:image/jpeg;base64,{img64}">
-        </div>
-        """, unsafe_allow_html=True)
+    cols = st.columns(3)
+    for col, img in zip(cols, ["assets/corte-1.jpg","assets/corte-2.jpg","assets/corte-3.jpg"]):
+        col.image(img, use_container_width=True)
 
-    st.markdown("---")
+    st.markdown("<hr>", unsafe_allow_html=True)
 
-    # ARIEL
+    perfil_ariel = img_to_b64("assets/ariel-perfil.jpg")
+
     st.markdown(f"""
     <div class="perfil-barbero">
-        <img src="data:image/jpeg;base64,{ariel_b64}">
+        <img class="perfil-avatar" src="data:image/jpeg;base64,{perfil_ariel}">
         <h3>💈 Ariel</h3>
-        <p>Barbero profesional — cortes modernos y nítidos.</p>
+        <p>Cortes clásicos y modernos, con enfoque en detalles.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    for img in ["assets/corte-1.jpg","assets/corte-2.jpg","assets/corte-3.jpg"]:
-        img64 = img_to_b64(img)
-        st.markdown(f"""
-        <div class="corte-box">
-            <img src="data:image/jpeg;base64,{img64}">
-        </div>
-        """, unsafe_allow_html=True)
+    cols = st.columns(3)
+    for col, img in zip(cols, ["assets/corte-4.jpg","assets/corte-5.jpg","assets/corte-6.jpg"]):
+        col.image(img, use_container_width=True)
 
 # ============================================================
 # APRENDIZ
@@ -224,3 +217,4 @@ if selected == "Reseñas":
     st.subheader("💬 Opiniones reales")
     st.image("assets/review-1.png")
     st.image("assets/review-2.png")
+    st.markdown("### ⭐ Déjanos tu reseña en Google")
