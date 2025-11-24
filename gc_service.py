@@ -1,3 +1,4 @@
+# gc_service.py
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
@@ -42,7 +43,25 @@ class GoogleService:
         self.service = build("calendar", "v3", credentials=creds)
 
     # ------------------------------------------------------------------
-    # CREAR EVENTO (versión usada por tu app.py)
+    # VERIFICAR SI YA HAY EVENTO EN EL MISMO HORARIO
+    # ------------------------------------------------------------------
+    def existe_evento(self, calendar_id, inicio, fin):
+        try:
+            eventos = self.service.events().list(
+                calendarId=calendar_id,
+                timeMin=inicio.isoformat(),
+                timeMax=fin.isoformat(),
+                singleEvents=True,
+                orderBy="startTime"
+            ).execute().get("items", [])
+            return len(eventos) > 0
+
+        except Exception as e:
+            print("❌ Error verificando conflicto:", e)
+            return False
+
+    # ------------------------------------------------------------------
+    # CREAR EVENTO EN GOOGLE CALENDAR
     # ------------------------------------------------------------------
     def crear_evento(self, calendar_id, resumen, descripcion, inicio, fin, timezone="America/Guayaquil"):
         try:
@@ -72,50 +91,3 @@ class GoogleService:
 
         except Exception as e:
             raise Exception(f"❌ Error creando evento en Google Calendar: {e}")
-
-    # ------------------------------------------------------------------
-    # FUNCION OPCIONAL: generar horarios libres
-    # ------------------------------------------------------------------
-    def generar_slots_libres(self, calendar_id: str, fecha: datetime, duracion_min: int):
-        try:
-            start_day = datetime(fecha.year, fecha.month, fecha.day, 9, 0, tzinfo=TZ)
-            end_day = datetime(fecha.year, fecha.month, fecha.day, 20, 0, tzinfo=TZ)
-            step = timedelta(minutes=30)
-            horas = []
-
-            events = self.service.events().list(
-                calendarId=calendar_id,
-                timeMin=start_day.isoformat(),
-                timeMax=end_day.isoformat(),
-                singleEvents=True,
-                orderBy="startTime"
-            ).execute().get("items", [])
-
-            ocupados = []
-            for e in events:
-                s = e["start"].get("dateTime")
-                f = e["end"].get("dateTime")
-                if s and f:
-                    s_dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
-                    f_dt = datetime.fromisoformat(f.replace("Z", "+00:00"))
-                    ocupados.append((s_dt, f_dt))
-
-            current = start_day
-            while current + timedelta(minutes=duracion_min) <= end_day:
-
-                libre = True
-                for (s, f) in ocupados:
-                    if s <= current < f:
-                        libre = False
-                        break
-
-                if libre:
-                    horas.append(current.strftime("%H:%M"))
-
-                current += step
-
-            return horas
-
-        except Exception as e:
-            print("❌ Error generando horarios libres:", e)
-            return []

@@ -46,11 +46,11 @@ selected = option_menu(
 )
 
 # ============================================================
-# RESERVAR
+# RESERVAR SIN PAGO
 # ============================================================
 if selected == "Reservar":
 
-    st.subheader("✂️ Reserva tu cita (pago obligatorio)")
+    st.subheader("✂️ Reserva tu cita (sin pago adelantado)")
 
     col1, col2 = st.columns(2)
     nombre = col1.text_input("Tu Nombre *")
@@ -80,75 +80,41 @@ if selected == "Reservar":
 
     barbero = col2.selectbox("Barbero *", ["", "💈 Josué", "💈 Ariel", "🧪 Aprendiz"])
 
-    if "mostrar_qr" not in st.session_state:
-        st.session_state["mostrar_qr"] = False
-    if "pago_ok" not in st.session_state:
-        st.session_state["pago_ok"] = False
-
+    # -------------------------------------------------
+    # CREAR EVENTO GOOGLE CALENDAR DIRECTO
+    # -------------------------------------------------
     if st.button("Reservar"):
+
         if not nombre or not whatsapp or not fecha or servicio == "" or barbero == "":
             st.warning("⚠ Debes llenar todos los campos obligatorios.")
         else:
-            if barbero == "🧪 Aprendiz":
-                st.session_state["pago_ok"] = True
-            else:
-                st.session_state["mostrar_qr"] = True
+            try:
+                start = datetime.combine(fecha, datetime.strptime(hora, "%H:%M").time())
+                end = start + timedelta(hours=1)
 
-    # --------------------------------------------
-    # QR PAGO
-    # --------------------------------------------
-    if st.session_state["mostrar_qr"] and not st.session_state["pago_ok"]:
+                descripcion = (
+                    f"Cliente: {nombre}\n"
+                    f"WhatsApp: {whatsapp}\n"
+                    f"Email: {email}\n"
+                    f"Servicio: {servicio}\n"
+                    f"Barbero: {barbero}\n"
+                    f"Nota: {nota}\n"
+                    f"Pago: No requiere pago adelantado"
+                )
 
-        precio = servicios[servicio]
+                gc.crear_evento(
+                    calendar_id=CALENDAR_ID,
+                    resumen=f"Reserva {servicio} - {nombre}",
+                    descripcion=descripcion,
+                    inicio=start,
+                    fin=end
+                )
 
-        st.markdown(f"""
-        ### 🏦 Confirmar pago para tu reserva
-        <div class="qr-box">
-            <h4>💰 Total a pagar: {precio}.00 USD</h4>
-            <p>Escanea este QR para pagar y confirmar tu cita.<br>
-            Al llegar, solo muestra tu comprobante.</p>
-        </div>
-        """, unsafe_allow_html=True)
+                st.success("✅ Reserva creada con éxito. ¡Gracias por agendar!")
+                st.balloons()
 
-        st.image("assets/qr_pago.png", width=260)
-
-        if st.button("✔ Ya pagué"):
-            st.session_state["pago_ok"] = True
-
-    # --------------------------------------------
-    # CREAR EVENTO GOOGLE CALENDAR
-    # --------------------------------------------
-    if st.session_state["pago_ok"]:
-        try:
-            start = datetime.combine(fecha, datetime.strptime(hora, "%H:%M").time())
-            end = start + timedelta(hours=1)
-
-            descripcion = (
-                f"Cliente: {nombre}\n"
-                f"WhatsApp: {whatsapp}\n"
-                f"Email: {email}\n"
-                f"Servicio: {servicio}\n"
-                f"Barbero: {barbero}\n"
-                f"Nota: {nota}\n"
-                f"Pago: { '✔ PAGADO' if barbero != '🧪 Aprendiz' else 'No aplica — aprendiz' }"
-            )
-
-            gc.crear_evento(
-                calendar_id=CALENDAR_ID,
-                resumen=f"Reserva {servicio} - {nombre}",
-                descripcion=descripcion,
-                inicio=start,
-                fin=end
-            )
-
-            st.success("✅ Reserva creada con éxito. ¡Gracias!")
-            st.balloons()
-
-            st.session_state["mostrar_qr"] = False
-            st.session_state["pago_ok"] = False
-
-        except Exception as e:
-            st.error(f"❌ Error creando evento: {e}")
+            except Exception as e:
+                st.error(f"❌ Error creando el evento: {e}")
 
 # ============================================================
 # PORTAFOLIO
